@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Unzip project
+        run: unzip -q ./*.zip
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -15,9 +17,10 @@ jobs:
       - name: Accept SDK licenses
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
       - uses: gradle/actions/setup-gradle@v4
-      - run: chmod +x gradlew
-      - run: ./gradlew --no-daemon assembleDebug
+      - name: Build
+        working-directory: school27
+        run: chmod +x gradlew && ./gradlew --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: school27-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: school27/app/build/outputs/apk/debug/app-debug.apk
