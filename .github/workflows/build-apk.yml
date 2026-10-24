@@ -1,4 +1,4 @@
-name: Build APK
+name: Сборка APK
 on:
   push:
   workflow_dispatch:
@@ -9,7 +9,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Unzip project
-        run: unzip -q ./*.zip
+        run: |
+          Z=$(find . -iname '*.zip' -not -path './.git/*' | head -1)
+          if [ -z "$Z" ]; then
+            echo "::error::ZIP не найден. Файлы в репозитории: $(find . -not -path './.git/*' -type f | tr '\n' ' ')"
+            exit 1
+          fi
+          echo "Нашёл: $Z"
+          mkdir -p /tmp/proj && unzip -q "$Z" -d /tmp/proj
+          mv /tmp/proj/* ./proj_unpacked
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -18,9 +26,9 @@ jobs:
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
       - uses: gradle/actions/setup-gradle@v4
       - name: Build
-        working-directory: school27
+        working-directory: proj_unpacked
         run: chmod +x gradlew && ./gradlew --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: school27-apk
-          path: school27/app/build/outputs/apk/debug/app-debug.apk
+          path: proj_unpacked/app/build/outputs/apk/debug/app-debug.apk
